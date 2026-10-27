@@ -5,6 +5,8 @@ import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import ImageryTileLayer from '@arcgis/core/layers/ImageryTileLayer';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import Graphic from '@arcgis/core/Graphic';
+import Polygon from '@arcgis/core/geometry/Polygon';
+import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Sketch from '@arcgis/core/widgets/Sketch';
 import { FieldRecord, loadFields, saveFields } from './fields';
 
@@ -64,11 +66,30 @@ export default function App() {
     const drawn = drawnLayerRef.current;
     if (!drawn) return;
     drawn.removeAll();
-    fields.forEach((field) => {
-      drawn.add(new Graphic({ geometry: { type: 'polygon', ...field.geometry } as __esri.PolygonProperties,
-        attributes: { id: field.id, name: field.name },
-        symbol: { type: 'simple-fill', color: [19, 95, 57, 0.12], outline: { color: field.id === selected ? [255, 195, 0, 1] : [17, 103, 65, 1], width: field.id === selected ? 3 : 2 } } as __esri.SimpleFillSymbolProperties }));
-    });
+    
+fields.forEach((field) => {
+  const polygon = new Polygon(field.geometry);
+
+  const symbol = new SimpleFillSymbol({
+    color: [19, 95, 57, 0.12],
+    outline: {
+      color: field.id === selected
+        ? [255, 195, 0, 1]
+        : [17, 103, 65, 1],
+      width: field.id === selected ? 3 : 2,
+    },
+  });
+
+  drawn.add(new Graphic({
+    geometry: polygon,
+    attributes: {
+      id: field.id,
+      name: field.name,
+    },
+    symbol,
+  }));
+});
+
     saveFields(fields);
   }, [fields, selected]);
 
@@ -86,7 +107,10 @@ export default function App() {
   function zoomTo(record: FieldRecord) {
     setSelected(record.id);
     const graphic = drawnLayerRef.current?.graphics.find((g) => g.attributes?.id === record.id);
-    if (graphic) viewRef.current?.goTo(graphic.geometry.extent.expand(1.5));
+    const extent = graphic?.geometry?.extent;
+if (extent) {
+  viewRef.current?.goTo(extent.expand(1.5));
+}
   }
   return <div className="shell">
     <header><div><strong>AgriMonitor</strong><small>Management Console · Belize sugarcane</small></div><span className="prototype">PROTOTYPE · BROWSER-LOCAL FIELDS</span></header>
