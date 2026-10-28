@@ -124,8 +124,12 @@ export default function App() {
   useEffect(() => { if (ndviLayerRef.current) ndviLayerRef.current.visible = ndviVisible; }, [ndviVisible]);
   useEffect(() => { if (ndviLayerRef.current) ndviLayerRef.current.opacity = ndviOpacity / 100; }, [ndviOpacity]);
   useEffect(() => { if (simisLayerRef.current) simisLayerRef.current.visible = simisVisible; }, [simisVisible]);
-  useEffect(() => { if (viewRef.current) viewRef.current.map.basemap = Basemap.fromId(basemap); }, [basemap]);
-
+  useEffect(() => {
+  const map = viewRef.current?.map;
+  if (map) {
+    map.basemap = Basemap.fromId(basemap);
+  }
+}, [basemap]);
   const updateForm = (key: keyof FormData, value: string) => setForm(old => ({ ...old, [key]: value }));
   useEffect(() => {
     const controller = new AbortController();
